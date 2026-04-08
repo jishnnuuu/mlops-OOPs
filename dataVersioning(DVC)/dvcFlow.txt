@@ -22,3 +22,26 @@ outs:
     - size is the file size in bytes, used for tracking changes and storage management.
     - path is the relative path to the data file, used for locating the data when needed
 
+# Commit the changes to git
+git add .
+git commit -m"added data v1"
+
+# now let's modify the dataset
+echo "version 2 data" > dataset/data.txt
+
+
+# open the .dvc file to see the metadata
+cat dataset/data.txt.dvc
+
+outs:
+- md5: a5d9ba04542ceb7c6b72f29903865faa
+  size: 15
+  hash: md5
+  path: data.txt
+
+the md5 hash has changed, indicating that the content of the file has changed, even though the size remains the same. 
+This allows dvc to track changes to the dataset effectively.
+
+# commit the changes to git
+git add .
+git commit -m"updated data to v2"
