@@ -1,0 +1,24 @@
+# initialize the repository with dvc
+dvc init
+
+# create a sample dataset
+mkdir dataset
+echo "version 1 data" > dataset/data.txt
+
+# add the dataset to dvc
+dvc add dataset/data.txt
+
+# open the .dvc file to see the metadata
+cat dataset/data.txt.dvc
+
+outs:
+- md5: 5d41402abc4b2a76b9719d911017c592
+  size: 15
+  path: data.txt
+
+# what the .dvc file means:
+    - .dvc file is a pointer, not the data itself, This file is commitable and can be tracked by git.
+    - md5 is the hash of the file content, used for tracking changes.(think of it as a fingerprint of the file)
+    - size is the file size in bytes, used for tracking changes and storage management.
+    - path is the relative path to the data file, used for locating the data when needed
+
