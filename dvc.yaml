@@ -13,3 +13,6 @@ stages:
     - train.py
     outs:
     - model.txt
+    params:
+    - params.json:
+      - lr

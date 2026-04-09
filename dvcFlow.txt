@@ -119,3 +119,44 @@ outputs
 command
 It hashes dependencies
 If hash unchanged → skip
+
+## LET US EXPERIMENT ON FEW THINGS
+- modified train.py which needs lr from params.json
+- added params.json with lr value
+
+we shall modify the train stage to include params.json as a dependency
+
+>> dvc stage add --force -n train \        
+    -d train.py -d dataset/processed_data.txt -p params.json:lr \
+    -o model.txt \
+    python train.py
+
+
+-p params.json:lr → to specify that we want to track the lr parameter from params.json
+“Tells that this stage depends on parameter lr”
+
+to run the pipeline again
+>> dvc repro
+
+run the experiment with different lr value without changing the params.json file
+>> dvc exp run -S params.json:lr=0.2 -m "experiment with lr 0.2"
+
+to see the experiments and their metrics
+>> dvc exp show
+
+
+Experiment                 Created        lr     data>
+ ──────────────────────────────────────────────────────>
+  workspace                  -              0.2    ad4a>
+  main                       Apr 08, 2026   -      ad4a>
+  ├── b189050 [bulgy-hunk]   08:03 PM       0.2    ad4a>
+  ├── 2c49004 [barer-doit]   12:01 AM       0.1    ad4a>
+  ├── a8d5e09 [pasty-rugs]   12:00 AM       0.01   ad4a>
+  ├── 184489c [glare-worm]   Apr 08, 2026   0.1    ad4a>
+  └── df427ab [taboo-monk]   Apr 08, 2026   0.1    ad4a>
+ ──────────────────────────────────────────────────────>
+
+ # select an experiment to apply to workspace
+ dvc exp apply <id>
+ dvc exp apply a8d5e09
+
