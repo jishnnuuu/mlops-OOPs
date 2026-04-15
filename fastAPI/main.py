@@ -9,7 +9,7 @@ custom HTTP error responses when something goes wrong in API.
 """
 import json
 from pydantic import BaseModel, Field, computed_field
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Optional
 
 app = FastAPI()
 
@@ -36,6 +36,17 @@ class Patient(BaseModel):
             return 'normal'
         else:
             return 'obese'
+        
+class Patient_update(BaseModel):
+    # id is commented because id is not modified, based on id we update other values
+    # id : Annotated[Optional[str], Field(default=None)]
+    name : Annotated[Optional[str], Field(default=None)]
+    city : Annotated[Optional[str], Field(default=None)]
+    age : Annotated[Optional[int],Field(default=None, gt=0)]
+    gender : Annotated[Optional[Literal['male','female','others']], Field(default=None)]
+    height : Annotated[Optional[float], Field(default=None, gt=0)]
+    weight : Annotated[Optional[float], Field(default=None, gt=0)]
+
 
 def load_data():
     with open('patients.json','r') as f:
@@ -65,7 +76,7 @@ def view():
 
 #path params(dynamic)
 @app.get('/patient/{patient_id}')
-def view_patient(patient_id: str = Path(..., description='ID of the patient in the DB', examples='P002')):
+def view_patient(patient_id: str = Path(..., description='ID of the patient in the DB', examples=['P002'])):
     # load all the patients
     data = load_data()
     
@@ -107,3 +118,55 @@ def create_patient(patient : Patient):
     save_data(data)
     
     return JSONResponse(status_code=201, content={'message':'Patient created successfully'})
+
+
+@app.put('/edit/{patient_id}')
+def update_patient(patient_id : str, patient: Patient_update):
+    #load data
+    data = load_data()
+    
+    #check if the id is present
+    if patient_id not in data:
+        raise HTTPException(status_code=404, detail='Patient does not exists')
+    
+    # retrieving existing data
+    existing_data = data[patient_id]
+    
+    # modifications from user and exclude_unset so not to get default values
+    updated_data = patient.model_dump(exclude_unset=True)
+    
+    # updating the existing model with the updated_data
+    for key, value in updated_data.items():
+        existing_data[key] = value
+    
+    # computed fields has to be modified according to changes
+    """ 
+    existing_data -> pydantic object(Patient model) -> convert into dict -> update in the json
+    but before sending into pydantic object we shall add id
+    """
+    existing_data['id'] = patient_id
+    updated_data_computed = Patient(**existing_data)
+    
+    #removing id for updating into the data
+    updated_data_computed_dict = updated_data_computed.model_dump(exclude='id')
+    
+    #updated the data of that particular patient_id
+    data[patient_id] = updated_data_computed_dict
+    
+    save_data(data)
+    return JSONResponse(status_code=200, content='data updated')
+
+@app.delete('/delete/{patient_id}')
+def delete_patient(patient_id : str):
+    # load data
+    data = load_data()
+    
+    #check if the id is present
+    if patient_id not in data:
+        raise HTTPException(status_code=404, detail='Patient does not exists')
+    
+    del data[patient_id]
+    
+    save_data(data)
+    
+    return JSONResponse(status_code=200, content='data deleted')
